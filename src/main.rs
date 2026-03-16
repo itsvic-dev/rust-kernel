@@ -19,7 +19,11 @@ fn _start() {
 }
 
 #[panic_handler]
-fn panic(_p: &PanicInfo) -> ! {
-    // FIXME
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    // syscon shutdown
+    unsafe {
+        write_volatile(0x100000 as *mut u32, 0x5555);
+    }
     loop {}
 }
