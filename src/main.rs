@@ -1,10 +1,11 @@
 #![no_std]
 #![no_main]
 
-use core::{panic::PanicInfo, ptr::write_volatile};
+use core::panic::PanicInfo;
 
 mod hal;
 mod print;
+mod syscon;
 mod uart;
 
 unsafe extern "C" {
@@ -45,11 +46,9 @@ extern "C" fn main(hartid: usize, fdt: usize) {
     }
 
     println!("hello from {}", fdt.root().model());
+    syscon::init(&fdt);
 
-    // syscon shutdown
-    unsafe {
-        write_volatile(0x100000 as *mut u32, 0x5555);
-    }
+    syscon::poweroff();
     loop {}
 }
 
