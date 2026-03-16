@@ -24,11 +24,27 @@ extern "C" fn _start() {
     )
 }
 
-fn main() {
+extern "C" fn main(hartid: usize, fdt: usize) {
     // TODO: init from DT
-    uart::new_global(0x1000_0000 as *mut u8);
-    let hart_id = read_csr!(hal::MHARTID);
-    println!("hello from hart {hart_id}");
+    if hartid != 0 {
+        loop {}
+    }
+
+    let fdt = unsafe { fdt::Fdt::from_ptr(fdt as *const u8).unwrap() };
+    // find UART node in FDT and init UART
+    if let Some(uart_node) = fdt.find_compatible(&["ns16550a"]) {
+        uart::new_global(
+            uart_node
+                .reg()
+                .unwrap()
+                .nth(0)
+                .unwrap()
+                .starting_address
+                .cast_mut(),
+        );
+    }
+
+    println!("hello from {}", fdt.root().model());
 
     // syscon shutdown
     unsafe {
@@ -40,9 +56,5 @@ fn main() {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    // syscon shutdown
-    unsafe {
-        write_volatile(0x100000 as *mut u32, 0x5555);
-    }
     loop {}
 }

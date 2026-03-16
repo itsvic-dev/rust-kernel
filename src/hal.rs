@@ -1,3 +1,4 @@
+#[allow(unused)]
 pub const MHARTID: u16 = 0xF14;
 
 #[macro_export]
