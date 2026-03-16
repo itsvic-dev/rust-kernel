@@ -3,15 +3,32 @@
 
 use core::{panic::PanicInfo, ptr::write_volatile};
 
+mod hal;
 mod print;
 mod uart;
 
+unsafe extern "C" {
+    static _end: u8;
+}
+
 #[unsafe(no_mangle)]
-fn _start() {
+#[unsafe(link_section = ".init")]
+#[unsafe(naked)]
+extern "C" fn _start() {
+    core::arch::naked_asm!(
+        "la sp, {stack}",
+        "andi sp, sp, -16",
+        "j {main}",
+        stack = sym _end,
+        main = sym main,
+    )
+}
+
+fn main() {
     // TODO: init from DT
     uart::new_global(0x1000_0000 as *mut u8);
-
-    println!("hello, world!");
+    let hart_id = read_csr!(hal::MHARTID);
+    println!("hello from hart {hart_id}");
 
     // syscon shutdown
     unsafe {
