@@ -5,9 +5,8 @@ const UART_ADDR: *mut u8 = 0x10000000 as *mut u8;
 
 pub fn uart_init() {
     unsafe {
-        let line_control_reg = UART_ADDR.offset(3);
-        write_volatile(line_control_reg, 3); // 8-bit words
-        write_volatile(line_control_reg, 1); // enable FIFOs
+        write_volatile(UART_ADDR.offset(3), 3); // 8-bit words
+        write_volatile(UART_ADDR.offset(2), 1); // enable FIFOs
         write_volatile(UART_ADDR.offset(1), 1); // enable receiver interrupts
     }
 }
