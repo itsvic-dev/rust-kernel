@@ -1,39 +1,59 @@
 // hardcoded for now, needs to be read from DTB
 use core::ptr::write_volatile;
 
-const UART_ADDR: *mut u8 = 0x10000000 as *mut u8;
+static mut UART_INSTANCE: Option<UART> = None;
 
-pub fn uart_init() {
+pub fn new_global(addr: *mut u8) {
+    let writer = UART::new(addr);
+    writer.init();
     unsafe {
-        write_volatile(UART_ADDR.offset(3), 3); // 8-bit words
-        write_volatile(UART_ADDR.offset(2), 1); // enable FIFOs
-        write_volatile(UART_ADDR.offset(1), 1); // enable receiver interrupts
+        UART_INSTANCE = Some(writer);
     }
 }
 
-fn uart_putc(c: u8) {
-    unsafe {
-        write_volatile(UART_ADDR, c);
+#[derive(Clone, Copy)]
+pub struct UART {
+    addr: *mut u8,
+}
+
+impl UART {
+    fn new(addr: *mut u8) -> Self {
+        Self { addr }
+    }
+
+    fn init(&self) {
+        unsafe {
+            write_volatile(self.addr.offset(3), 3); // 8-bit words
+            write_volatile(self.addr.offset(2), 1); // enable FIFOs
+            write_volatile(self.addr.offset(1), 1); // enable receiver interrupts
+        }
+    }
+
+    fn putc(&self, c: u8) {
+        unsafe {
+            write_volatile(self.addr, c);
+        }
+    }
+
+    fn puts(&self, s: &str) {
+        for c in s.bytes() {
+            self.putc(c);
+        }
     }
 }
 
-pub fn uart_puts(s: &str) {
-    for c in s.bytes() {
-        uart_putc(c);
-    }
-}
-
-pub struct Writer;
-impl core::fmt::Write for Writer {
+impl core::fmt::Write for UART {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        uart_puts(s);
+        self.puts(s);
         Ok(())
     }
 }
 
 pub fn print(args: core::fmt::Arguments) {
     use core::fmt::Write;
-    Writer {}.write_fmt(args).unwrap();
+    unsafe {
+        UART_INSTANCE.inspect(|writer| writer.clone().write_fmt(args).unwrap());
+    }
 }
 
 #[macro_export]

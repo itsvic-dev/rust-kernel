@@ -7,7 +7,8 @@ mod uart;
 
 #[unsafe(no_mangle)]
 fn _start() {
-    uart::uart_init();
+    // TODO: init from DT
+    uart::new_global(0x1000_0000 as *mut u8);
 
     println!("hello, world!");
 
