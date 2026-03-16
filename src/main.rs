@@ -3,6 +3,7 @@
 
 use core::{panic::PanicInfo, ptr::write_volatile};
 
+mod print;
 mod uart;
 
 #[unsafe(no_mangle)]
