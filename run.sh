@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -eu
-cd kernel
-cargo build
-cd ..
+make
 echo "[+] Starting QEMU..."
 exec , qemu-system-riscv64 \
   -M virt \
