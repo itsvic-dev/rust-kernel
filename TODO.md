@@ -1,0 +1,24 @@
+- physical memory manager
+  - find space for bitmap
+  - mark kernel pages as reserved
+  - dynamic allocator
+- virtual memory manager for U-mode
+  - Sv39 paging
+- trap handler
+  - dump registers onto stack and restore before mret
+- timer CSRs and interrupts
+- preemptive scheduler and U-mode switching
+- syscalls
+- VFS
+- filesystems
+  - ramfs
+  - ext2?
+- load ramdisk (cpio? tar?) to ramfs
+- better kernel device modules
+  - some sort of module registration system
+  - device tree traversal
+  - dependency resolution
+  - PCI
+- kernel panic tracebacks
+- SMP support
+- mlibc port
