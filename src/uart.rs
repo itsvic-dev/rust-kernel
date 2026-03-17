@@ -1,13 +1,25 @@
 // hardcoded for now, needs to be read from DTB
 use core::ptr::write_volatile;
 
+use fdt::Fdt;
+
 pub static mut UART_INSTANCE: Option<UART> = None;
 
-pub fn new_global(addr: *mut u8) {
-    let writer = UART::new(addr);
-    writer.init();
-    unsafe {
-        UART_INSTANCE = Some(writer);
+pub fn new_global(fdt: &Fdt) {
+    // find UART node in FDT and init UART
+    if let Some(uart_node) = fdt.find_compatible(&["ns16550a"]) {
+        let addr = uart_node
+            .reg()
+            .unwrap()
+            .nth(0)
+            .unwrap()
+            .starting_address
+            .cast_mut();
+        let writer = UART::new(addr);
+        writer.init();
+        unsafe {
+            UART_INSTANCE = Some(writer);
+        }
     }
 }
 

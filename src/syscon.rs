@@ -31,7 +31,7 @@ pub fn init(fdt: &fdt::Fdt) {
             })
         }
 
-        println!("found syscon at {:x}", addr as usize);
+        println!("syscon: found at 0x{:x}", addr as usize);
     }
 }
 
@@ -39,6 +39,7 @@ pub fn init(fdt: &fdt::Fdt) {
 pub fn reboot() {
     unsafe {
         SYSCON_INSTANCE.inspect(|syscon| {
+            println!("syscon: rebooting");
             syscon
                 .reboot_value
                 .inspect(|reboot| write_volatile(syscon.addr, *reboot as u32));
@@ -49,6 +50,7 @@ pub fn reboot() {
 pub fn poweroff() {
     unsafe {
         SYSCON_INSTANCE.inspect(|syscon| {
+            println!("syscon: shutting down");
             syscon
                 .poweroff_value
                 .inspect(|poweroff| write_volatile(syscon.addr, *poweroff as u32));
