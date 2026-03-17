@@ -22,7 +22,7 @@ extern "C" fn _start() {
 }
 
 extern "C" fn main(hartid: usize, fdt: usize) {
-    // TODO: init from DT
+    // TODO: SMP
     if hartid != 0 {
         loop {}
     }
