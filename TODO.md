@@ -1,9 +1,8 @@
-- physical memory manager
-  - find space for bitmap
-  - mark kernel pages as reserved
-  - dynamic allocator
-- virtual memory manager for U-mode
-  - Sv39 paging
+- physical memory manager (bitmap)
+  - [x] find space for bitmap
+  - [x] mark kernel pages as reserved
+- alloc::GlobalAlloc
+- Sv39
 - trap handler
   - dump registers onto stack and restore before mret
 - timer CSRs and interrupts

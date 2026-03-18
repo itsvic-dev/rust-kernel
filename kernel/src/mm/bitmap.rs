@@ -23,9 +23,12 @@ unsafe extern "C" {
 pub fn init(fdt: &Fdt) {
     let kernel_base = unsafe { &_start as *const _ as usize };
     let kernel_length = unsafe { (&_end as *const _ as usize) - (kernel_base) };
-    let kernel_length_pages = pages_needed_for_bytes(kernel_length);
+    let kernel_pages = pages_needed_for_bytes(kernel_length);
     println!(
-        "mm: kernel is {kernel_length} bytes ({kernel_length_pages} pages) big at 0x{kernel_base:x}"
+        "mm: kernel: {:x}-{:x}, {} pages",
+        kernel_base,
+        kernel_base + kernel_length,
+        kernel_pages
     );
 
     let mem = fdt.memory();
@@ -36,17 +39,21 @@ pub fn init(fdt: &Fdt) {
     assert!(mem_size % PAGE_SIZE == 0);
     let mem_pages = mem_size / PAGE_SIZE;
     println!(
-        "mm: physical mem starts at 0x{mem_base:x} and is {mem_size} bytes ({mem_pages} pages) big"
+        "mm: physical memory: {:x}-{:x}, {} pages",
+        mem_base,
+        mem_base + mem_size,
+        mem_pages
     );
+
     let bitmap_size = mem_pages / 8;
     let bitmap_pages = pages_needed_for_bytes(bitmap_size);
-    println!("mm: need a bitmap {bitmap_size} bytes ({bitmap_pages} pages) big");
+    println!("mm: bitmap will occupy {bitmap_pages} pages");
 
     // todo: handle memory reservations
     // for now we can assume it's safe to place after the kernel
     unsafe {
-        let bitmap_addr = ((kernel_length_pages) * PAGE_SIZE + mem_base) as *mut u8;
-        println!("mm: putting bitmap at 0x{:x}", bitmap_addr as usize);
+        let bitmap_addr = ((kernel_pages) * PAGE_SIZE + mem_base) as *mut u8;
+        // println!("mm: putting bitmap at 0x{:x}", bitmap_addr as usize);
         bitmap_addr.write_bytes(0, bitmap_size);
 
         BITMAP = Some(MemoryBitmap {
@@ -61,11 +68,7 @@ pub fn init(fdt: &Fdt) {
             true,
         );
 
-        mark_pages(
-            kernel_length_pages,
-            (kernel_base - mem_base) / PAGE_SIZE,
-            true,
-        );
+        mark_pages(kernel_pages, (kernel_base - mem_base) / PAGE_SIZE, true);
     }
 }
 
@@ -140,7 +143,7 @@ unsafe fn find_free_pages(count: usize) -> Option<usize> {
     None
 }
 
-// todo: track allocations
+// todo: track allocations?
 pub fn page_alloc(page_count: usize) -> Option<*mut u8> {
     unsafe {
         find_free_pages(page_count).map(|offset| {
