@@ -11,7 +11,7 @@ struct MemoryBitmap {
     mem_pages: usize,
 }
 
-fn pages_needed_for_bytes(count: usize) -> usize {
+pub(super) fn pages_needed_for_bytes(count: usize) -> usize {
     count / PAGE_SIZE + (if count % PAGE_SIZE != 0 { 1 } else { 0 })
 }
 
@@ -123,14 +123,21 @@ unsafe fn find_free_pages(count: usize) -> Option<usize> {
             }
 
             // check if pages i+1...i+count are set
+            let mut is_ok = true;
             for j in (i + 1)..(count + i) {
                 let byte_off = (j / 8) as isize;
                 let bit_off = j % 8;
                 let bit_mask = (1 << bit_off) as u8;
 
                 if bitmap_addr.offset(byte_off).read() & bit_mask != 0 {
-                    continue;
+                    is_ok = false;
+                    break;
                 }
+            }
+
+            // if the other pages check fell through,
+            if !is_ok {
+                continue;
             }
 
             // if we got here, we likely found contiguous space for this alloc

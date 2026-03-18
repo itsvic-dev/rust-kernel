@@ -1,8 +1,9 @@
 - physical memory manager (bitmap)
   - [x] find space for bitmap
   - [x] mark kernel pages as reserved
-- alloc::GlobalAlloc
-- Sv39
+- [x] alloc::GlobalAlloc
+  - [ ] allocate blocks smaller than 1 page
+- Sv39 for U-mode
 - trap handler
   - dump registers onto stack and restore before mret
 - timer CSRs and interrupts
