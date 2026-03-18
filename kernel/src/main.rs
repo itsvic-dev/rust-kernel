@@ -4,22 +4,10 @@
 use core::panic::PanicInfo;
 
 mod hal;
+mod mm;
 mod print;
 mod syscon;
 mod uart;
-
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".init")]
-#[unsafe(naked)]
-extern "C" fn _start() {
-    core::arch::naked_asm!(
-        "la gp, __global_pointer$",
-        "la sp, _end",
-        "andi sp, sp, -16",
-        "tail {main}",
-        main = sym main,
-    )
-}
 
 extern "C" fn main(hartid: usize, fdt: usize) {
     // TODO: SMP
@@ -33,6 +21,7 @@ extern "C" fn main(hartid: usize, fdt: usize) {
     println!("main: hello from {}", fdt.root().model());
 
     hal::init();
+    mm::bitmap::init(&fdt);
 
     syscon::init(&fdt);
 
@@ -44,4 +33,17 @@ extern "C" fn main(hartid: usize, fdt: usize) {
 fn panic(info: &PanicInfo) -> ! {
     println!("--- KERNEL PANIC ---\n{}", info);
     loop {}
+}
+
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".init")]
+#[unsafe(naked)]
+extern "C" fn _start() {
+    core::arch::naked_asm!(
+        "la gp, __global_pointer$",
+        "la sp, _end",
+        "andi sp, sp, -16",
+        "tail {main}",
+        main = sym main,
+    )
 }
